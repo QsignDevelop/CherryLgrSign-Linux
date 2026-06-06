@@ -1,0 +1,30 @@
+preloads = [
+  "/usr/lib/x86_64-linux-gnu/libX11-xcb.so.1",
+  "/usr/lib/x86_64-linux-gnu/libX11.so.6",
+  "/usr/lib/x86_64-linux-gnu/libgnutls.so.30",
+]
+listen = "0.0.0.0:5201"
+sign_mode = "dlopen"
+
+# 留空并 offset_auto=true 时，按 sub_5BD3EA1 机器码特征自动定位
+offset = ""
+offset_auto = true
+offset_signatures = []
+
+# 留空则自动从 package.json / major.node 检测
+version = ""
+
+[env]
+auto_setup = true
+display = ":99"
+data_path = ""
+qq_app_dir = "/opt/QQ/resources/app"
+copy_from_qq = true
+sync_from_qq = true
+chdir_to_wrapper = true
+timezone = "Asia/Shanghai"
+
+[attach]
+bridge_socket = "/tmp/nekogel_sign_bridge.sock"
+qq_process_names = ["qq", "QQ", "linuxqq", "qq-exe"]
+wait_ready_seconds = 120

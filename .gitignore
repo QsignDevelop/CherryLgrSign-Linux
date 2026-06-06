@@ -1,0 +1,55 @@
+# QQ packages
+*.deb
+*.tar.gz
+*.AppImage
+
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+bin/
+*.node
+
+# QQ runtime files (copy from local QQ install)
+wrapper.node
+major.node
+libbugly.so
+libcrbase.so
+sharp-lib/
+nt_temp/
+resources/
+versions/
+
+# Local config (use sign.config.toml.example)
+sign.config.toml
+
+# Deploy scripts with credentials (local only)
+scripts/deploy_remote.py
+scripts/install_cloudflared.py
+scripts/check_remote.py
+scripts/test_remote_api.py
+scripts/read_log.py
+scripts/start_remote.py
+scripts/debug_remote_load.py
+scripts/upload_libcrbase_and_start.py
+scripts/fix_remote_deps.py
+scripts/diagnose_remote.py
+
+# Generated runtime
+appinfo.json
+config.env.json
+package.json
+
+# Go
+*.test
+*.out
+vendor/
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db

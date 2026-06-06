@@ -1,0 +1,135 @@
+name: Build Executables
+
+on:
+  push:
+    branches: [ main, master ]
+    paths:
+      - '**.go'
+      - 'go.mod'
+      - 'go.sum'
+      - '.github/workflows/build-executables.yml'
+  pull_request:
+    branches: [ main, master ]
+    paths:
+      - '**.go'
+      - 'go.mod'
+      - 'go.sum'
+      - '.github/workflows/build-executables.yml'
+  release:
+    types: [ created ]
+  # 添加手动触发
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build for Linux
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.21'
+
+    - name: Cache Go modules
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+
+    - name: Clean previous builds
+      run: |
+        rm -f sign-server
+        rm -rf release/
+
+    - name: Build full version
+      run: |
+        go build -o sign-server .
+        make -C sign_bridge
+
+    - name: Test executable
+      run: |
+        ./sign-server -h || echo "Help command not available or failed"
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: linux-binaries
+        path: sign-server
+
+  release:
+    name: Create Release
+    needs: build
+    # 移除了条件限制，无论如何都运行
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: linux-binaries
+
+    - name: Get current date
+      id: date
+      run: echo "date=$(date +%Y-%m-%d)" >> $GITHUB_ENV
+
+    - name: Prepare release assets
+      run: |
+        # Create release directory
+        mkdir -p release
+        
+        # Copy binaries
+        cp sign-server release/
+        
+        # Copy config files if they exist
+        if [ -f sign.config.toml ]; then
+          cp sign.config.toml release/
+        fi
+        
+        # Copy README and LICENSE if they exist
+        if [ -f README.md ]; then
+          cp README.md release/
+        fi
+        if [ -f LICENSE ]; then
+          cp LICENSE release/
+        fi
+        
+        # Create tar.gz package
+        tar -czf SignServer-linux.tar.gz -C release .
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: "✨🐾 Release v1.0 — Neko Edition 🐾✨"
+        name: "✨🐾 Release v1.0 — Neko Edition 🐾✨"
+        body: |
+          ## Automated Release
+          
+          This is an automated release created on ${{ env.date }}.
+          
+          ### Features
+          - Token-based Authentication: Secure API access with token management
+          - Admin APIs: Add and delete tokens with administrator key
+          - Unified API Endpoints: Simplified endpoint structure
+          - New AppInfo Format: Updated AppInfo response format
+          - Flexible Startup: Support for specifying wrapper.node file path
+          - Custom AppInfo: Support for custom appinfo.json in wrapper directory
+          - Automatic AppInfo Conversion: Automatically converts old AppInfo format to new format
+          - Debug Mode: Detailed logging available with --debug flag
+          
+          ### How to Use
+          1. Download the binary for your platform
+          2. Configure the server by editing sign.config.toml
+          3. Run the server: ./sign-server -wrapper-path /path/to/wrapper.node
+        files: |
+          SignServer-linux.tar.gz
+          sign-server
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
